@@ -127,7 +127,7 @@
     "react-native-screens": "2.10.1",
     "react-native-scrollable-tab-view": "git+https://github.com/flyskywhy/react-native-scrollable-tab-view.git#0.6.6",
     "react-native-web": "0.13.9",
-    "react-native-webview": "11.26.1",
+    "react-native-webview": "13.7.2",
     "react-navigation": "4.4.0",
     "react-navigation-drawer": "2.5.0",
     "react-navigation-redux-helpers": "4.0.1",
