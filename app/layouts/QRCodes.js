@@ -72,14 +72,14 @@ class QRCodes extends PureComponent {
   };
 
   _onBarCodeRead = (e) => {
-    const {actions, navigation} = this.props;
+    const {actions, navigation, route} = this.props;
     this._stopScan();
     if (!this.getData) {
       return;
     }
-    if (navigation.state.params.isRegister) {
-      navigation.state.params.callback &&
-        navigation.state.params.callback(e.nativeEvent.data.code);
+    if (route.params.isRegister) {
+      route.params.callback &&
+        route.params.callback(e.nativeEvent.data.code);
       navigation.goBack();
       return;
     }
@@ -103,7 +103,7 @@ class QRCodes extends PureComponent {
       this._startScan();
       return;
     }
-    if (navigation.state.params.isConnectDevice && id2 && key) {
+    if (route.params.isConnectDevice && id2 && key) {
       this.registerDev(id2, key);
     }
 

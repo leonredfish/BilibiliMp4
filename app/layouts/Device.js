@@ -18,8 +18,8 @@ class Device extends PureComponent {
     super(props);
     this.checkedLabel = [];
     this.state = {
-      name: props.navigation.state.params.data.c_client_config
-        ? props.navigation.state.params.data.c_client_config.name
+      name: props.route.params.data.c_client_config
+        ? props.route.params.data.c_client_config.name
         : '',
       loadModalVisible: false,
     };
@@ -102,10 +102,10 @@ class Device extends PureComponent {
   };
 
   toModifyDeviceOwner = () => {
-    const {navigation, id} = this.props;
+    const {navigation, route, id} = this.props;
     navigation.navigate('ModifyDeviceOwner', {
       deviceId: id,
-      data: navigation.state.params.data,
+      data: route.params.data,
     });
   };
 

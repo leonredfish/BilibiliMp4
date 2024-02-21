@@ -10,18 +10,12 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {setRootViewBackgroundColor} from '@kingstinct/react-native-root-view-background';
 import {connect} from 'react-redux';
 import * as UtilsComponent from './Utils';
-import {NavigationActions} from 'react-navigation';
-import {createReduxContainer} from 'react-navigation-redux-helpers';
-import {AppNavigator} from '../configs/Router';
+import Router from '../configs/Router';
 import connectComponent from '../utils/connectComponent';
 import config from '../configs';
 
 const Utils = connectComponent(UtilsComponent);
 let lastBackPressed = null;
-
-const AppNavigatorWithNavState = connect((state) => ({
-  state: state.nav,
-}))(createReduxContainer(AppNavigator, 'root'));
 
 class Navigation extends PureComponent {
   componentDidUpdate(prevProps, prevState) {
@@ -41,11 +35,6 @@ class Navigation extends PureComponent {
   }
 
   onBackPress = () => {
-    const {dispatch, nav} = this.props;
-    if (nav.index > 0) {
-      dispatch(NavigationActions.back());
-      return true;
-    }
     if (lastBackPressed && lastBackPressed + 2000 >= Date.now()) {
       return false;
     }
@@ -66,7 +55,7 @@ class Navigation extends PureComponent {
           barStyle="light-content"
           hidden={false}
         />
-        <AppNavigatorWithNavState />
+        <Router />
         <Utils />
       </GestureHandlerRootView>
     );

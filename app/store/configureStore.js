@@ -1,6 +1,5 @@
 import {createStore, applyMiddleware} from 'redux';
 import thunkMiddleware from 'redux-thunk';
-import reactNavigationMiddleware from './reactNavigationMiddleware';
 import promiseMiddleware from './promiseMiddleware';
 import asyncActionCallbackMiddleware from './asyncActionCallbackMiddleware';
 import utilsMiddleware from './utilsMiddleware';
@@ -18,7 +17,6 @@ const logger = createLogger({
 
 let middlewares = [
   thunkMiddleware,
-  reactNavigationMiddleware,
   promiseMiddleware,
   asyncActionCallbackMiddleware,
   minPendingTimeMiddleware,

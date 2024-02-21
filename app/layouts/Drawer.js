@@ -1,7 +1,9 @@
 import React from 'react';
 import {ImageBackground, ScrollView, StyleSheet, View} from 'react-native';
-import {SafeAreaView} from 'react-navigation';
-import {DrawerNavigatorItems} from 'react-navigation-drawer';
+import {
+  DrawerContentScrollView,
+  DrawerItemList,
+} from '@react-navigation/drawer';
 import BaseComponent from '../BaseComponent';
 
 class Drawer extends BaseComponent {
@@ -15,13 +17,9 @@ class Drawer extends BaseComponent {
         style={[styles.container, {height, width: 252}]}
         resizeMode="stretch">
         <View style={styles.viewContainer}>
-          <ScrollView>
-            <SafeAreaView
-              style={styles.container}
-              forceInset={{top: 'always', horizontal: 'never'}}>
-              <DrawerNavigatorItems {...this.props} />
-            </SafeAreaView>
-          </ScrollView>
+          <DrawerContentScrollView {...this.props}>
+            <DrawerItemList {...this.props} />
+          </DrawerContentScrollView>
         </View>
       </ImageBackground>
     );

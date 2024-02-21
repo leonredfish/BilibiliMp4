@@ -11,7 +11,7 @@ class WebViewLayout extends PureComponent {
         onPress: () => props.navigation.goBack(),
       },
       Center: {
-        text: props.navigation.state.params.text,
+        text: props.route.params.text,
       },
     };
   }
@@ -22,7 +22,7 @@ class WebViewLayout extends PureComponent {
         <Nav navs={this.navs} />
         <WebView
           automaticallyAdjustContentInsets={false}
-          source={{uri: this.props.navigation.state.params.url}}
+          source={{uri: this.props.route.params.url}}
           javaScriptEnabled={true}
           decelerationRate="normal"
           startInLoadingState={true}

@@ -8,7 +8,6 @@ import deviceUI from './deviceUI';
 import disGroup from './disGroup';
 import disGroupUI from './disGroupUI';
 import localPersistence from './localPersistence';
-import nav from './nav';
 
 export default combineReducers({
   local,
@@ -20,5 +19,4 @@ export default combineReducers({
   disGroup,
   disGroupUI,
   localPersistence,
-  nav,
 });
