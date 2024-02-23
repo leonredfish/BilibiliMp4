@@ -1,4 +1,4 @@
-package com.reactwebnative8koa.newarchitecture.modules;
+package com.leonredfish.bilibilimp4.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

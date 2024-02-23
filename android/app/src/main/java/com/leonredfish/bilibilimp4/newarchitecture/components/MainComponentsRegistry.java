@@ -1,4 +1,4 @@
-package com.reactwebnative8koa.newarchitecture.components;
+package com.leonredfish.bilibilimp4.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
