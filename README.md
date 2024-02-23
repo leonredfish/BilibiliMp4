@@ -1,4 +1,4 @@
-# ReactWebNative8Koa
+# Bilibili MP4
 
 ## Windows 所需安装的工具
 Python 2.7；.Net Framework 2 或 3；Visual Studio 2005 或更高。
@@ -27,7 +27,10 @@ Python 2.7；.Net Framework 2 或 3；Visual Studio 2005 或更高。
 ### 配置 npm 镜像
 为避免后续执行 `npm install` 时因网络问题导致的下载失败，最好是配置一下镜像：
 
-    npm config set registry https://registry.npm.taobao.org
+```
+npm config set registry https://registry.npmmirror.com/
+```
+或者自行用 `nrm` 配置。
 
 ### 使用 npm 自动安装 package.json 中的包
 在项目根目录中运行如下命令会把包安装到 `node_modules/` 中：
