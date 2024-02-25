@@ -18,6 +18,7 @@ import * as About from '../layouts/About';
 import * as ConnectDevice from '../layouts/ConnectDevice';
 import * as Drawer from '../layouts/Drawer';
 import * as Device from '../layouts/Device';
+import * as Home from '../layouts/Home';
 import * as Login from '../layouts/Login';
 import * as LoginCode from '../layouts/LoginCode';
 import * as LoginPage from '../layouts/LoginPage';
@@ -53,6 +54,9 @@ const RouterConfigs = {
   },
   Device: {
     screen: connectComponent(Device),
+  },
+  Home: {
+    screen: connectComponent(Home),
   },
   Login: {
     screen: connectComponent(Login),
@@ -103,7 +107,7 @@ const Stack = createStackNavigator();
 function HomeStackScreen() {
   return (
     <Stack.Navigator
-      initialRouteName="ConnectDevice"
+      initialRouteName="Home"
       mode="card" // 跳转方式：默认的 card ，在 iOS 上是从右到左跳转，在 Android 上是从下到上，都是使用原生系统的默认跳转方式
       headerMode="screen" // 导航条动画效果： float 表示会渐变，类似于 iOS 的原生效果， screen 表示没有渐变， none 表示隐藏导航条
       screenOptions={{
@@ -119,6 +123,7 @@ function HomeStackScreen() {
         component={RouterConfigs.ConnectDevice.screen}
       />
       <Stack.Screen name="Device" component={RouterConfigs.Device.screen} />
+      <Stack.Screen name="Home" component={RouterConfigs.Home.screen} />
       <Stack.Screen name="Login" component={RouterConfigs.Login.screen} />
       <Stack.Screen
         name="LoginCode"
