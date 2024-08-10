@@ -74,3 +74,4 @@ package-lock.json
 test-mocha/app/output/
 *.sublime-*
 dump.rdb
+.vscode/

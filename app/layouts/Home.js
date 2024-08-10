@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Nav from '../components/Nav';
 import config from '../configs';
-import {FFmpegKit} from 'ffmpeg-kit-react-native';
+import {FFmpegKit, ReturnCode} from 'ffmpeg-kit-react-native';
 if (Platform.OS !== 'web') {
   var DocumentPicker = require('react-native-document-picker').default;
   var ReactNativeBlobUtil = require('react-native-blob-util').default;
@@ -77,7 +77,42 @@ class About extends PureComponent {
               onPress={() => {
                 const ROOT_PATH = 'merged';
                 Alert.alert('Notice', 'Choose what to do', [
-                  {text: 'merge one collection', onPress: () => {}},
+                  {
+                    text: 'merge one collection',
+                    onPress: async () => {
+                      const uri = this.state.uri;
+                      const entryJson = await ReactNativeBlobUtil.fs.readFile(
+                        `${uri}/entry.json`,
+                        'utf8',
+                      );
+                      const entryData = JSON.parse(entryJson);
+
+                      const avTitle = entryData.title.replace(/\//g, ' ');
+                      const avTypeTag = entryData.type_tag;
+                      const avPage = entryData.page_data.page;
+                      const avPart = entryData.page_data.part.replace(
+                        /\//g,
+                        ' ',
+                      );
+
+                      const inPath = `${uri}/${avTypeTag}`;
+                      const outPath = '/storage/emulated/0/Movies';
+                      const outFile = `${outPath}/${avPage}_${avPart}`;
+                      FFmpegKit.execute(
+                        `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
+                      ).then(async session => {
+                        const returnCode = await session.getReturnCode();
+                        console.warn('return code', JSON.stringify(returnCode));
+                        if (ReturnCode.isSuccess(returnCode)) {
+                          Alert.alert('Success');
+                        } else if (ReturnCode.isCancel(returnCode)) {
+                          Alert.alert('Canceled');
+                        } else {
+                          Alert.alert('Error!');
+                        }
+                      });
+                    },
+                  },
                   {text: 'merge all collections', onPress: () => {}},
                 ]);
               }}
