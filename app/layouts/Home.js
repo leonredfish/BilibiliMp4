@@ -33,6 +33,113 @@ class About extends PureComponent {
     }
   };
 
+  pickContentDirectory = async () => {
+    try {
+      const result = await DocumentPicker.pickDirectory();
+      if (Platform.OS === 'android') {
+        let url = decodeURIComponent(result.uri).replace(
+          /^content:\/\/com.android.externalstorage.documents\/tree\//,
+          '',
+        );
+        if (url.startsWith('primary')) {
+          url = url.replace(/^primary:/, '/storage/emulated/0/');
+        } else {
+          const volumeName = url.replace(/:.*/, '');
+          url = url.replace(/^.*:/, '');
+          url = '/storage/' + volumeName + '/' + url;
+        }
+        this.setState({uri: url});
+      }
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        Alert.alert('取消', '目录选择已取消');
+      } else {
+        Alert.alert('错误', '目录选择出错');
+      }
+    }
+  };
+
+  doOneMerge = async () => {
+    if (!this.state.uri) {
+      Alert.alert('错误', '请选择目录');
+      return;
+    }
+    const uri = this.state.uri;
+
+    const entryJson = await ReactNativeBlobUtil.fs.readFile(
+      `${uri}/entry.json`,
+      'utf8',
+    );
+    const entryData = JSON.parse(entryJson);
+
+    const avTitle = entryData.title.replace(/\//g, ' ');
+    const avTypeTag = entryData.type_tag;
+    const avPage = entryData.page_data.page;
+    const avPart = entryData.page_data.part.replace(/\//g, ' ');
+
+    const inPath = `${uri}/${avTypeTag}`;
+    const outPath = '/storage/emulated/0/Movies';
+    const outFile = `${outPath}/${avPage}_${avPart}`;
+    FFmpegKit.execute(
+      `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
+    ).then(async session => {
+      const returnCode = await session.getReturnCode();
+      console.warn('return code', JSON.stringify(returnCode));
+      if (ReturnCode.isSuccess(returnCode)) {
+        Alert.alert('Success');
+      } else if (ReturnCode.isCancel(returnCode)) {
+        Alert.alert('Canceled');
+      } else {
+        Alert.alert('Error!');
+      }
+    });
+  };
+
+  doAllMerge = async () => {
+    if (!this.state.uri) {
+      Alert.alert('错误', '请选择目录');
+      return;
+    }
+    const uri = this.state.uri;
+    const files = await ReactNativeBlobUtil.fs.ls(uri);
+    const subDirs = files.filter(async file => {
+      const stat = await ReactNativeBlobUtil.fs.stat(`${uri}/${file}`);
+      return stat.type === 'directory';
+    });
+    try {
+      for (const subDir of subDirs) {
+        const mergeSubDir = `${uri}/${subDir}`;
+        const entryJson = await ReactNativeBlobUtil.fs.readFile(
+          `${mergeSubDir}/entry.json`,
+          'utf8',
+        );
+        const entryData = JSON.parse(entryJson);
+
+        const avTitle = entryData.title.replace(/\//g, ' ');
+        const avTypeTag = entryData.type_tag;
+        const avPage = entryData.page_data.page;
+        const avPart = entryData.page_data.part.replace(/\//g, ' ');
+
+        const inPath = `${mergeSubDir}/${avTypeTag}`;
+        const outPath = `/storage/emulated/0/Movies/${avTitle}`;
+        const outFile = `${outPath}/${avPage}_${avPart}`;
+        if (await ReactNativeBlobUtil.fs.exists(outPath)) {
+          const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
+        } else {
+          await ReactNativeBlobUtil.fs.mkdir(outPath);
+        }
+
+        FFmpegKit.execute(
+          `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
+        );
+      }
+      Alert.alert('Success');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error!');
+    }
+  };
+
   render() {
     const navs = {
       Center: {
@@ -52,25 +159,9 @@ class About extends PureComponent {
             </Text>
             <TouchableHighlight
               style={styles.title}
-              onPress={async () => {
-                const result = await DocumentPicker.pickDirectory();
-                if (Platform.OS === 'android') {
-                  let url = decodeURIComponent(result.uri).replace(
-                    /^content:\/\/com.android.externalstorage.documents\/tree\//,
-                    '',
-                  );
-                  if (url.startsWith('primary')) {
-                    url = url.replace(/^primary:/, '/storage/emulated/0/');
-                  } else {
-                    const volumeName = url.replace(/:.*/, '');
-                    url = url.replace(/^.*:/, '');
-                    url = '/storage/' + volumeName + '/' + url;
-                  }
-                  this.setState({uri: url});
-                }
-              }}
+              onPress={this.pickContentDirectory}
             >
-              <Text style={styles.gitShaText}>open folder</Text>
+              <Text style={styles.gitShaText}>open content folder</Text>
             </TouchableHighlight>
             <Text style={styles.subTitle}>{this.state.uri}</Text>
             <TouchableHighlight
@@ -79,41 +170,12 @@ class About extends PureComponent {
                 Alert.alert('Notice', 'Choose what to do', [
                   {
                     text: 'merge one collection',
-                    onPress: async () => {
-                      const uri = this.state.uri;
-                      const entryJson = await ReactNativeBlobUtil.fs.readFile(
-                        `${uri}/entry.json`,
-                        'utf8',
-                      );
-                      const entryData = JSON.parse(entryJson);
-
-                      const avTitle = entryData.title.replace(/\//g, ' ');
-                      const avTypeTag = entryData.type_tag;
-                      const avPage = entryData.page_data.page;
-                      const avPart = entryData.page_data.part.replace(
-                        /\//g,
-                        ' ',
-                      );
-
-                      const inPath = `${uri}/${avTypeTag}`;
-                      const outPath = '/storage/emulated/0/Movies';
-                      const outFile = `${outPath}/${avPage}_${avPart}`;
-                      FFmpegKit.execute(
-                        `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
-                      ).then(async session => {
-                        const returnCode = await session.getReturnCode();
-                        console.warn('return code', JSON.stringify(returnCode));
-                        if (ReturnCode.isSuccess(returnCode)) {
-                          Alert.alert('Success');
-                        } else if (ReturnCode.isCancel(returnCode)) {
-                          Alert.alert('Canceled');
-                        } else {
-                          Alert.alert('Error!');
-                        }
-                      });
-                    },
+                    onPress: this.doOneMerge,
                   },
-                  {text: 'merge all collections', onPress: () => {}},
+                  {
+                    text: 'merge all collections',
+                    onPress: this.doAllMerge,
+                  },
                 ]);
               }}
             >
