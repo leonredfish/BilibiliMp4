@@ -76,18 +76,28 @@ class About extends PureComponent {
     const avTitle = entryData.title.replace(/\//g, ' ');
     const avTypeTag = entryData.type_tag;
     const avPage = entryData.page_data.page;
-    const avPart = entryData.page_data.part.replace(/\//g, ' ');
+    let avPart; // Declare the variable 'avPart'
+    if (entryData.page_data.part === undefined) {
+      entryData.page_data.part = undefined;
+    } else {
+      avPart = entryData.page_data.part.replace(/\//g, ' '); // Assign a value to 'avPart'
+    }
 
     const inPath = `${uri}/${avTypeTag}`;
     const outPath = '/storage/emulated/0/Movies';
-    const outFile = `${outPath}/${avPage}_${avPart}`;
+    let outFile;
+    if (avPart === undefined) {
+      outFile = sanitize(`${avPage}_${avTitle}`);
+    } else {
+      outFile = sanitize(`${avPage}_${avPart}`);
+    }
     if (await ReactNativeBlobUtil.fs.exists(outPath)) {
       const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
     } else {
       await ReactNativeBlobUtil.fs.mkdir(outPath);
     }
     FFmpegKit.execute(
-      `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
+      `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outPath}/${outFile}.mp4"`,
     ).then(async session => {
       const returnCode = await session.getReturnCode();
       console.warn('return code', JSON.stringify(returnCode));
@@ -124,11 +134,21 @@ class About extends PureComponent {
         const avTitle = entryData.title.replace(/\//g, ' ');
         const avTypeTag = entryData.type_tag;
         const avPage = entryData.page_data.page;
-        const avPart = entryData.page_data.part.replace(/\//g, ' ');
+        let avPart;
+        if (entryData.page_data.part === undefined) {
+          entryData.page_data.part = undefined;
+        } else {
+          avPart = entryData.page_data.part.replace(/\//g, ' ');
+        }
 
         const inPath = `${mergeSubDir}/${avTypeTag}`;
         const outPath = `/storage/emulated/0/Movies/`+sanitize(avTitle);
-        const outFile = `${outPath}/${avPage}_${avPart}`;
+        let outFile;
+        if (avPart === undefined) {
+          outFile = sanitize(`${avPage}_${avTitle}`);
+        } else {
+          outFile = sanitize(`${avPage}_${avPart}`);
+        }
         if (await ReactNativeBlobUtil.fs.exists(outPath)) {
           const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
         } else {
@@ -136,7 +156,7 @@ class About extends PureComponent {
         }
 
         FFmpegKit.execute(
-          `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
+          `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outPath}/${outFile}.mp4"`,
         );
       }
       Alert.alert('Success');
