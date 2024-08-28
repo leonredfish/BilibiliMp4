@@ -80,6 +80,11 @@ class About extends PureComponent {
     const inPath = `${uri}/${avTypeTag}`;
     const outPath = '/storage/emulated/0/Movies';
     const outFile = `${outPath}/${avPage}_${avPart}`;
+    if (await ReactNativeBlobUtil.fs.exists(outPath)) {
+      const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
+    } else {
+      await ReactNativeBlobUtil.fs.mkdir(outPath);
+    }
     FFmpegKit.execute(
       `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outFile}.mp4"`,
     ).then(async session => {
