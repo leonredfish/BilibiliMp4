@@ -11,6 +11,7 @@ import {
 import Nav from '../components/Nav';
 import config from '../configs';
 import {FFmpegKit, ReturnCode} from 'ffmpeg-kit-react-native';
+import sanitize from 'sanitize-filename';
 if (Platform.OS !== 'web') {
   var DocumentPicker = require('react-native-document-picker').default;
   var ReactNativeBlobUtil = require('react-native-blob-util').default;
@@ -126,7 +127,7 @@ class About extends PureComponent {
         const avPart = entryData.page_data.part.replace(/\//g, ' ');
 
         const inPath = `${mergeSubDir}/${avTypeTag}`;
-        const outPath = `/storage/emulated/0/Movies/${avTitle}`;
+        const outPath = `/storage/emulated/0/Movies/`+sanitize(avTitle);
         const outFile = `${outPath}/${avPage}_${avPart}`;
         if (await ReactNativeBlobUtil.fs.exists(outPath)) {
           const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);

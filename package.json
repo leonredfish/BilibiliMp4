@@ -148,6 +148,7 @@
     "request": "2.83.0",
     "rmc-date-picker": "5.5.0",
     "rmc-picker": "4.0.4",
+    "sanitize-filename": "^1.6.3",
     "sequelize": "4.3.1",
     "superagent": "1.8.5",
     "sync-request": "3.0.1",
