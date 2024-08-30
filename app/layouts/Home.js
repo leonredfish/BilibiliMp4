@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  FlatList,
   InteractionManager,
   TouchableHighlight,
   Alert,
@@ -21,6 +22,7 @@ class About extends PureComponent {
     super(props);
     this.state = {
       uri: '',
+      successFiles: [],
     };
     this.tapCount = 0;
   }
@@ -60,110 +62,102 @@ class About extends PureComponent {
     }
   };
 
-  doOneMerge = async () => {
+  doMerge = async () => {
     if (!this.state.uri) {
       Alert.alert('错误', '请选择目录');
       return;
     }
     const uri = this.state.uri;
 
-    const entryJson = await ReactNativeBlobUtil.fs.readFile(
-      `${uri}/entry.json`,
-      'utf8',
-    );
-    const entryData = JSON.parse(entryJson);
+    const processDirectory = async directory => {
+      const entryJson = await ReactNativeBlobUtil.fs.readFile(
+        `${directory}/entry.json`,
+        'utf8',
+      );
+      const entryData = JSON.parse(entryJson);
+      console.warn(entryData);
 
-    const avTitle = entryData.title.replace(/\//g, ' ');
-    const avTypeTag = entryData.type_tag;
-    const avPage = entryData.page_data.page;
-    let avPart; // Declare the variable 'avPart'
-    if (entryData.page_data.part === undefined) {
-      entryData.page_data.part = undefined;
-    } else {
-      avPart = entryData.page_data.part.replace(/\//g, ' '); // Assign a value to 'avPart'
-    }
-
-    const inPath = `${uri}/${avTypeTag}`;
-    const outPath = '/storage/emulated/0/Movies';
-    let outFile;
-    if (avPart === undefined) {
-      outFile = sanitize(`${avPage}_${avTitle}`);
-    } else {
-      outFile = sanitize(`${avPage}_${avPart}`);
-    }
-    if (await ReactNativeBlobUtil.fs.exists(outPath)) {
-      const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
-    } else {
-      await ReactNativeBlobUtil.fs.mkdir(outPath);
-    }
-    FFmpegKit.execute(
-      `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outPath}/${outFile}.mp4"`,
-    ).then(async session => {
-      const returnCode = await session.getReturnCode();
-      console.warn('return code', JSON.stringify(returnCode));
-      if (ReturnCode.isSuccess(returnCode)) {
-        Alert.alert('Success');
-      } else if (ReturnCode.isCancel(returnCode)) {
-        Alert.alert('Canceled');
+      const avTitle = entryData.title.replace(/\//g, ' ');
+      const avTypeTag = entryData.type_tag;
+      const avPage = entryData.page_data.page;
+      let avPart;
+      if (entryData.page_data.part === undefined) {
+        entryData.page_data.part = undefined;
       } else {
-        Alert.alert('Error!');
+        avPart = entryData.page_data.part.replace(/\//g, ' ');
       }
-    });
+
+      const inPath = `${directory}/${avTypeTag}`;
+      const outPath = `/storage/emulated/0/Movies/` + sanitize(avTitle);
+      let outFile;
+      if (avPart === undefined) {
+        outFile = sanitize(`${avPage}_${avTitle}`);
+      } else {
+        outFile = sanitize(`${avPage}_${avPart}`);
+      }
+      if (await ReactNativeBlobUtil.fs.exists(outPath)) {
+        const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
+      } else {
+        await ReactNativeBlobUtil.fs.mkdir(outPath);
+      }
+
+      await FFmpegKit.execute(
+        `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outPath}/${outFile}.mp4"`,
+      ).then(async session => {
+        const returnCode = await session.getReturnCode();
+        if (ReturnCode.isSuccess(returnCode)) {
+          const successFiles = this.state.successFiles.concat(
+            outPath + '/' + outFile,
+          );
+          this.setState({
+            successFiles,
+          });
+        } else if (ReturnCode.isCancel(returnCode)) {
+          Alert.alert('Canceled: ' + outPath + '/' + outFile);
+        } else {
+          Alert.alert('Error! ' + outPath + '/' + outFile);
+        }
+      });
+    };
+
+    const files = await ReactNativeBlobUtil.fs.ls(uri);
+    const subDirs = await Promise.all(
+      files.map(async file => {
+        const stat = await ReactNativeBlobUtil.fs.stat(`${uri}/${file}`);
+        return stat.type === 'directory' ? `${uri}/${file}` : null;
+      }),
+    );
+
+    const hasEntryJson = await ReactNativeBlobUtil.fs.exists(
+      `${uri}/entry.json`,
+    );
+
+    if (hasEntryJson) {
+      await processDirectory(uri);
+    } else {
+      try {
+        for (const subDir of subDirs.filter(Boolean)) {
+          const subDirHasEntryJson = await ReactNativeBlobUtil.fs.exists(
+            `${subDir}/entry.json`,
+          );
+          if (subDirHasEntryJson) {
+            await processDirectory(subDir);
+          }
+        }
+        Alert.alert('Success');
+      } catch (err) {
+        console.error(err);
+        Alert.alert('Error! ' + err.message);
+      }
+    }
   };
 
-  doAllMerge = async () => {
-    if (!this.state.uri) {
-      Alert.alert('错误', '请选择目录');
-      return;
-    }
-    const uri = this.state.uri;
-    const files = await ReactNativeBlobUtil.fs.ls(uri);
-    const subDirs = files.filter(async file => {
-      const stat = await ReactNativeBlobUtil.fs.stat(`${uri}/${file}`);
-      return stat.type === 'directory';
-    });
-    try {
-      for (const subDir of subDirs) {
-        const mergeSubDir = `${uri}/${subDir}`;
-        const entryJson = await ReactNativeBlobUtil.fs.readFile(
-          `${mergeSubDir}/entry.json`,
-          'utf8',
-        );
-        const entryData = JSON.parse(entryJson);
-
-        const avTitle = entryData.title.replace(/\//g, ' ');
-        const avTypeTag = entryData.type_tag;
-        const avPage = entryData.page_data.page;
-        let avPart;
-        if (entryData.page_data.part === undefined) {
-          entryData.page_data.part = undefined;
-        } else {
-          avPart = entryData.page_data.part.replace(/\//g, ' ');
-        }
-
-        const inPath = `${mergeSubDir}/${avTypeTag}`;
-        const outPath = `/storage/emulated/0/Movies/`+sanitize(avTitle);
-        let outFile;
-        if (avPart === undefined) {
-          outFile = sanitize(`${avPage}_${avTitle}`);
-        } else {
-          outFile = sanitize(`${avPage}_${avPart}`);
-        }
-        if (await ReactNativeBlobUtil.fs.exists(outPath)) {
-          const statTemp = await ReactNativeBlobUtil.fs.stat(outPath);
-        } else {
-          await ReactNativeBlobUtil.fs.mkdir(outPath);
-        }
-
-        FFmpegKit.execute(
-          `-i ${inPath}/video.m4s -i ${inPath}/audio.m4s -c copy -y -- "${outPath}/${outFile}.mp4"`,
-        );
-      }
-      Alert.alert('Success');
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error!');
-    }
+  renderSuccessFile = ({item}) => {
+    return (
+      <Text key={item} style={styles.subTitle}>
+        {item}
+      </Text>
+    );
   };
 
   render() {
@@ -190,25 +184,17 @@ class About extends PureComponent {
               <Text style={styles.gitShaText}>open content folder</Text>
             </TouchableHighlight>
             <Text style={styles.subTitle}>{this.state.uri}</Text>
-            <TouchableHighlight
-              onPress={() => {
-                const ROOT_PATH = 'merged';
-                Alert.alert('Notice', 'Choose what to do', [
-                  {
-                    text: 'merge one collection',
-                    onPress: this.doOneMerge,
-                  },
-                  {
-                    text: 'merge all collections',
-                    onPress: this.doAllMerge,
-                  },
-                ]);
-              }}
-            >
-              <Text style={styles.subTitle}>convert</Text>
+            <TouchableHighlight onPress={this.doMerge}>
+              <Text style={styles.gitShaText}>convert</Text>
             </TouchableHighlight>
-            <Text style={styles.subTitle}>{config.domain}</Text>
           </View>
+        </View>
+        <View style={{flex: 1}}>
+          <FlatList
+            style={styles.subTitle}
+            data={this.state.successFiles}
+            renderItem={this.renderSuccessFile}
+          />
         </View>
         <View style={styles.footer}>
           <Text style={styles.reactNative}>Power By React-Native</Text>
