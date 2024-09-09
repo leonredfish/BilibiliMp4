@@ -13,6 +13,7 @@ import Nav from '../components/Nav';
 import config from '../configs';
 import {FFmpegKit, ReturnCode} from 'ffmpeg-kit-react-native';
 import sanitize from 'sanitize-filename';
+import ManageExternalStorage from 'react-native-external-storage-permission';
 if (Platform.OS !== 'web') {
   var DocumentPicker = require('react-native-document-picker').default;
   var ReactNativeBlobUtil = require('react-native-blob-util').default;
@@ -67,6 +68,14 @@ class About extends PureComponent {
       Alert.alert('错误', '请选择目录');
       return;
     }
+    if (Platform.OS === 'android') {
+      const granted = await ManageExternalStorage.checkAndGrantPermission();
+      if (!granted) {
+        Alert.alert('错误', '请授予存储权限');
+        return;
+      }
+    }
+
     const uri = this.state.uri;
 
     const processDirectory = async directory => {

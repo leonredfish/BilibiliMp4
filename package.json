@@ -129,6 +129,7 @@
     "react-native": "0.70.5",
     "react-native-blob-util": "^0.18.6",
     "react-native-document-picker": "9.1.1",
+    "react-native-external-storage-permission": "^1.0.0",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "2.9.0",
     "react-native-permissions": "2.0.10",
