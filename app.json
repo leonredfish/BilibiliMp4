@@ -1,4 +1,8 @@
 {
   "name": "BilibiliMP4",
-  "displayName": "Bilibili MP4"
+  "displayName": "Bilibili MP4",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-5944276940915448~6231484045",
+    "ios_app_id": "ca-app-pub-5944276940915448~6231484045"
+  }
 }
